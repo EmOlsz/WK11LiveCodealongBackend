@@ -8,10 +8,14 @@ mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true })
 mongoose.Promise = Promise
 
 const Message = mongoose.model('Message', {
-  text:String,
-  created:{
-    type:Date,
-    default:Date.now
+  text: String,
+  created: {
+    type: Date,
+    default: Date.now
+  },
+  likes: {
+    type: Number,
+    default: 0
   }
 });
 
@@ -28,22 +32,34 @@ app.use(bodyParser.json())
 
 // Start defining your routes here
 app.get('/messages', async(req, res) => {
-  try{
+  try {
     const messages = await Message.find();
     res.status(200).json(messages);
-  }catch(err){
+  } catch(err) {
     res.status(400).send(err);
   }
 })
 
 app.post('/messages', async (req, res) => {
-  try{
-    const newMessage= await new Message(req.body).save();
+  try {
+    const newMessage = await new Message(req.body).save();
     res.status(200).json(newMessage);
-  }catch(err){
+  } catch(err) {
     res.status(400).send(err);
   }
+})
 
+app.post('/messages/:id/like', async (req, res) => {
+  try {
+    const editedMessage = await Message.findOneAndUpdate(
+      { _id: req.params.id },
+      { $inc: { likes: 1 } },
+      { new: true }
+    );
+    res.status(200).json(editedMessage);
+  } catch (err) {
+    res.status(400).json({ message: "Invalid thoughtId" });
+  }
 })
 
 // Start the server
